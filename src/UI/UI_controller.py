@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 # print(sys.path)
-from src.UI.UI_library import pandasModel, select_show_columns, convert_cv_qt
+from src.UI.UI_library import pandasModel, select_show_columns, convert_cv_qt, check_video_thread, get_time_format
 from src.UI.UI import Ui_MainWindow
 from src.UI.csv_page import Ui_new_page
 
@@ -43,7 +43,6 @@ class VideoThread(QThread):
                 # cv2.waitKey(25)
                 time.sleep(1 / fps * 0.81)
             
-
 class MainWindow_controller(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -51,10 +50,21 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle("badminton demo")
         self.setup_control()
+        self.setup_default()
+        
+    def setup_default(self):
         self.ui.slider.setDisabled(True)
+        self.ui.play.setDisabled(True)
+        self.ui.pause.setDisabled(True)
+        self.video_thread = None
         self.target_frame = 0
         self.target_frame_his = [0, 1]
-        
+
+    def setup_button(self):
+        self.ui.slider.setDisabled(False)
+        self.ui.play.setDisabled(False)
+        self.ui.pause.setDisabled(False)
+
     def setup_control(self):
         self.ui.select_file.clicked.connect(self.open_video)
         self.ui.show_csv.clicked.connect(self.open_page)
@@ -72,12 +82,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             return
         else:
             self.ui.show_path.setText(self.filename)
-        self.check_video_thread()
+        check_video_thread(self.video_thread)
+        self.setup_button()
         self.video_thread = VideoThread(self.filename)
         self.video_thread.change_pixmap_signal.connect(self.update_frame)
         self.video_thread.slider_setup_signal.connect(self.setup_slider)
         self.video_thread.start()
-        self.ui.slider.setDisabled(False)
         self.ui.show_video.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
 
     @pyqtSlot(np.ndarray)
@@ -86,25 +96,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         qt_img = convert_cv_qt(cv_img, h)
         self.ui.show_video.setPixmap(qt_img)
 
-    def check_video_thread(self):
-        try: 
-            if self.video_thread.isRunning():
-                self.video_thread.terminate()
-                print('stop thread')
-            elif self.video_thread.isFinished():
-                self.ui.show_video.clear()
-                self.ui.show_video.setText('Wait for new videos...')
-        except:pass
-
     @pyqtSlot(tuple)
     def setup_slider(self, signal):
         (self.frame_count, fps, length) = signal
         self.ui.slider.setRange(1, length)
         self.ui.slider.setValue(self.frame_count)
-        secs = int(self.frame_count/fps)
-        mins = int(secs / 60)
-        secs = secs % 60
-        self.ui.video_time.setText(f"{mins:02d}:{secs:02d}")
+        str_format = get_time_format(self.frame_count, fps)
+        self.ui.video_time.setText(str_format)
     
     def set_frame(self):
         self.target_frame = self.ui.slider.value()

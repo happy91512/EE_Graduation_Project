@@ -1,9 +1,12 @@
 import pandas as pd
 import cv2
+import sys
 import numpy as np
 from PyQt6.QtCore import QAbstractTableModel, Qt
 from PyQt6.QtGui import QImage, QPixmap
-
+# from src.UI.UI_controller import VideoThread
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2]))
 class pandasModel(QAbstractTableModel):
     def __init__(self, data):
         QAbstractTableModel.__init__(self)
@@ -39,10 +42,22 @@ def convert_cv_qt(cv_img : np.ndarray, target_h):
     p = convert_to_Qt_format.scaledToHeight(target_h)
     return QPixmap.fromImage(p)
 
+def check_video_thread(thread):
+    if thread == None: 
+        return
+    elif thread.isRunning(): 
+        thread.terminate()
+        return
+    
+def get_time_format(frame_count, fps):
+    secs = int(frame_count/fps)
+    mins = int(secs / 60)
+    secs = secs % 60
+    return f"{mins:02d}:{secs:02d}"
+
 if __name__ == '__main__':
     csv_path = 'saved_csv/00001_S2.csv'
     check_box = [True, False, False, True, True]
     df = pd.read_csv(csv_path).iloc[:, :5]
     show = df.iloc[:, check_box]
     print(show)
-    # select_show_columns

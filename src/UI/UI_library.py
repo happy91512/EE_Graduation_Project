@@ -1,8 +1,8 @@
 import pandas as pd
-import sys
-from PyQt6.QtWidgets import QApplication, QTableView
+import cv2
+import numpy as np
 from PyQt6.QtCore import QAbstractTableModel, Qt
-
+from PyQt6.QtGui import QImage, QPixmap
 
 class pandasModel(QAbstractTableModel):
     def __init__(self, data):
@@ -30,6 +30,14 @@ def select_show_columns(df : pd.DataFrame, check_list : list[bool]) -> pd.DataFr
     show = df.iloc[:, check_list]
     return show
 
+def convert_cv_qt(cv_img : np.ndarray, target_h):
+    """Convert from an opencv image to QPixmap"""
+    cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+    h, w, ch = cv_img.shape
+    bytes_per_line = ch * w
+    convert_to_Qt_format = QImage(cv_img.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+    p = convert_to_Qt_format.scaledToHeight(target_h)
+    return QPixmap.fromImage(p)
 
 if __name__ == '__main__':
     csv_path = 'saved_csv/00001_S2.csv'

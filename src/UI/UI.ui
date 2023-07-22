@@ -16,6 +16,9 @@
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
+  <property name="animated">
+   <bool>false</bool>
+  </property>
   <property name="documentMode">
    <bool>false</bool>
   </property>
@@ -42,7 +45,11 @@
      <bool>false</bool>
     </property>
     <property name="styleSheet">
-     <string notr="true">background:rgb(220, 220, 220)</string>
+     <string notr="true">background:rgb(230, 230, 230);
+color: rgb(30, 30, 30);
+border-radius: 10px;
+border-style: outset;
+</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
@@ -64,22 +71,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select a target video...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
-   <widget class="QLabel" name="show_video">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>854</width>
-      <height>480</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::Box</enum>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
    <widget class="QLabel" name="show_analysis">
     <property name="geometry">
      <rect>
@@ -89,6 +80,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
       <height>81</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 10px;
+border-style: outset;
+border-width: 1px;
+border-color: rgb(128, 128, 128);</string>
+    </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
     </property>
@@ -96,97 +93,490 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <string/>
     </property>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget">
+   <widget class="QGroupBox" name="groupBox">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>556</y>
-      <width>851</width>
-      <height>41</height>
+      <x>870</x>
+      <y>70</y>
+      <width>201</width>
+      <height>611</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="leftMargin">
-      <number>10</number>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 10px;
+background:rgb(230, 230, 230);
+color: rgb(30, 30, 30);</string>
+    </property>
+    <property name="title">
+     <string>Video Box</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
+    <widget class="QRadioButton" name="radioButton_2">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>90</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
      </property>
-     <property name="rightMargin">
-      <number>0</number>
+     <property name="text">
+      <string>RadioButton</string>
      </property>
-     <item>
-      <widget class="QPushButton" name="play">
-       <property name="text">
-        <string>Play</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pause">
-       <property name="text">
-        <string>Pause</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="slider">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="video_time">
-       <property name="text">
-        <string>00:00</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_5">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>270</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_3">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>150</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_9">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>510</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_7">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>390</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_4">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>210</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_6">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>330</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_10">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>570</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_1">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>30</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioButton_8">
+     <property name="geometry">
+      <rect>
+       <x>5</x>
+       <y>450</y>
+       <width>150</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_1">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>25</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_2">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>85</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_3">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>145</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_4">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>205</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_5">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>265</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_6">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>325</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_7">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>385</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_8">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>445</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_9">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>505</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="gif_10">
+     <property name="geometry">
+      <rect>
+       <x>165</x>
+       <y>565</y>
+       <width>30</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget_2">
+   <widget class="QPushButton" name="select_file">
     <property name="geometry">
      <rect>
       <x>870</x>
       <y>10</y>
-      <width>201</width>
+      <width>101</width>
       <height>51</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QPushButton" name="select_file">
-       <property name="text">
-        <string>選擇檔案</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>folder.png</normaloff>folder.png</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>32</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="show_csv">
-       <property name="text">
-        <string>預測成果</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>docs.png</normaloff>docs.png</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>32</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <property name="styleSheet">
+     <string notr="true">background:rgb(230, 230, 230);
+border-radius: 10px; 
+border-style: outset;
+border-color: black; 
+color: rgb(30, 30, 30);
+border-top-right-radius: 0px;
+border-bottom-right-radius: 0px;
+
+</string>
+    </property>
+    <property name="text">
+     <string>選擇檔案</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>folder.png</normaloff>folder.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>24</width>
+      <height>32</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="show_csv">
+    <property name="geometry">
+     <rect>
+      <x>970</x>
+      <y>10</y>
+      <width>101</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 10px; 
+border-style: outset;
+background:rgb(230, 230, 230);
+border-top-left-radius: 0px;
+border-bottom-left-radius: 0px;
+color: rgb(30, 30, 30);</string>
+    </property>
+    <property name="text">
+     <string>預測成果</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>docs.png</normaloff>docs.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>24</width>
+      <height>24</height>
+     </size>
+    </property>
+    <property name="autoDefault">
+     <bool>false</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="show_video">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>854</width>
+      <height>480</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 10px;
+border-style: outset;
+border-width: 1px;
+border-color: rgb(128, 128, 128);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="play_pause">
+    <property name="geometry">
+     <rect>
+      <x>6</x>
+      <y>549</y>
+      <width>68</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>play-button.png</normaloff>play-button.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>35</width>
+      <height>35</height>
+     </size>
+    </property>
+    <property name="autoDefault">
+     <bool>true</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="video_time">
+    <property name="geometry">
+     <rect>
+      <x>819</x>
+      <y>550</y>
+      <width>36</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>00:00</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="slider">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>565</y>
+      <width>733</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="tracking">
+     <bool>true</bool>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+    <property name="tickPosition">
+     <enum>QSlider::NoTicks</enum>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

@@ -3,7 +3,7 @@ import cv2
 import sys
 import numpy as np
 from PyQt6.QtCore import QAbstractTableModel, Qt
-from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtGui import QImage, QPixmap, QPainter
 # from src.UI.UI_controller import VideoThread
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -41,6 +41,18 @@ def convert_cv_qt(cv_img : np.ndarray, target_h):
     convert_to_Qt_format = QImage(cv_img.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
     p = convert_to_Qt_format.scaledToHeight(target_h)
     return QPixmap.fromImage(p)
+
+def cut2round(qt_img: QPixmap):
+    round_qt_img = QPixmap(qt_img.size())
+    round_qt_img.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(round_qt_img)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setBrush(Qt.GlobalColor.black)
+    painter.drawRoundedRect(qt_img.rect(), 10, 10)  
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+    painter.drawPixmap(qt_img.rect(), qt_img, qt_img.rect())
+    painter.end()
+    return round_qt_img
 
 def check_video_thread(thread):
     if thread == None: 

@@ -12,16 +12,17 @@ from submodules.UsefulTools.FileTools.WordOperator import str_format
 from submodules.UsefulTools.FileTools.FileOperator import get_filenames, check2create_dir
 from submodules.UsefulTools.FileTools.PickleOperator import save_pickle
 from src.net.net import BadmintonNet, BadmintonNetOperator
+from src.testing import TestEvaluate
 from src.training import ModelPerform
 from src.transforms import IterativeCustomCompose
 from src.data_process import DatasetInfo, Frame13Dataset  # , get_test_dataloader
 from src.evaluate.accuracy import calculate, model_acc_names
 from src.handcraft.handcraft import get_static_handcraft_table
-from src.handcraft.TrackNetv2_33_predict import TrackNetV2_33
-
-from src.testing import TestEvaluate
 from src.handcraft.TrackPoint import TrackPoint
 from src.pre_process.generate_dataset import generate_hit_datasets,generate_miss_datasets
+from src.handcraft.TrackNetv2_33_predict import TrackNetV2_33
+
+PROJECT_DIR = Path(__file__).resolve().parents[0]
 
 class TrackDebug:
     dir = Path('Data/Paper_used/pre_process')
@@ -67,7 +68,7 @@ def get5dir(
     ]
 
     with tf.device(device):
-        tNet33 = TrackNetV2_33('submodules/TrackNetv2/3_in_3_out/model906_30')
+        tNet33 = TrackNetV2_33(PROJECT_DIR/'submodules/TrackNetv2/3_in_3_out/model906_30')
 
 
         # for multiple dir
@@ -258,7 +259,7 @@ def main(
         source_dir = Path(predict_test),
         sub_dir = 'ball_mask5_dir',
         save_csv_path = save_csv_path,
-        model_path = 'Model/model/bestLoss-Sum.pt', 
+        model_path = str(PROJECT_DIR/'Model/model/bestLoss-Sum.pt'), 
         device=device
     )   # get csv
 
@@ -267,10 +268,10 @@ def main(
 if __name__ == '__main__':
     tt = time.time()
 
-    video_path = 'Data/predict_test/00001.mp4'
+    video_path = PROJECT_DIR/'Data/predict_test/00001.mp4'
     # video_path = 'Data/predict_test/00001/00001/00001.mp4'
     # video_path = 'Data/predict_test/00003.mp4'
-    main(video_path)
+    main(str(video_path))
     
     print('spend time = ', time.time() - tt)
     pass

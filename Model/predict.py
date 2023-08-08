@@ -1,26 +1,27 @@
-import torch
 import cv2
-import tensorflow as tf
-import pandas as pd
+import time
+import torch
 import os, shutil
+import pandas as pd
+import tensorflow as tf
 from typing import List
 from pathlib import Path
 from torchvision import transforms
 
+from submodules.UsefulTools.FileTools.WordOperator import str_format
 from submodules.UsefulTools.FileTools.FileOperator import get_filenames, check2create_dir
 from submodules.UsefulTools.FileTools.PickleOperator import save_pickle
-from submodules.UsefulTools.FileTools.WordOperator import str_format
-from src.handcraft.TrackNetv2_33_predict import TrackNetV2_33
+from src.net.net import BadmintonNet, BadmintonNetOperator
 from src.training import ModelPerform
 from src.transforms import IterativeCustomCompose
 from src.data_process import DatasetInfo, Frame13Dataset  # , get_test_dataloader
 from src.evaluate.accuracy import calculate, model_acc_names
-from src.net.net import BadmintonNet, BadmintonNetOperator
 from src.handcraft.handcraft import get_static_handcraft_table
+from src.handcraft.TrackNetv2_33_predict import TrackNetV2_33
 
+from src.testing import TestEvaluate
 from src.handcraft.TrackPoint import TrackPoint
 from src.pre_process.generate_dataset import generate_hit_datasets,generate_miss_datasets
-from src.testing import TestEvaluate
 
 class TrackDebug:
     dir = Path('Data/Paper_used/pre_process')
@@ -43,9 +44,9 @@ class TrackDebug:
 
         check2create_dir(str(self.dir))
         check2create_dir(str(self.image_dir))
-        check2create_dir(str(self.predict_dir))
-        check2create_dir(str(self.mask_dir))
-        check2create_dir(str(self.predict_merge_dir))
+        # check2create_dir(str(self.predict_dir))
+        # check2create_dir(str(self.mask_dir))
+        # check2create_dir(str(self.predict_merge_dir))
         check2create_dir(str(self.ball_mask5_dir))
 
 def get5dir(
@@ -61,8 +62,8 @@ def get5dir(
 
     DEBUG_LS = [
         'update_frame',
-        'predict',
-        'get_hitRangeMasks5',
+        # 'predict',
+        # 'get_hitRangeMasks5',
     ]
 
     with tf.device(device):
@@ -153,10 +154,10 @@ def testing(
     source_dir:str = 'Data/AIdea_used/pre-process',
     sub_dir:str = 'ball_mask5_dir',
     save_csv_path:str = 'train_hand_acc.csv',
+    model_path:str = 'Model/model/bestLoss-Sum.pt', 
     device:str = 'cpu'
 ):
     side_range = 1
-    model_path = 'model/0616-1825_BadmintonNet_BS-15_AdamW1.00e-04_Side1/bestAcc-HitFrame.pt'
 
     sizeHW = (512, 512)
     test_iter_compose = IterativeCustomCompose(
@@ -209,7 +210,6 @@ def testing(
 def main(
     video_path:str
 ):
-    device = 'cpu'
 
     #? chack if they have self dir
     video_id = video_path.split('/')[-1].split('.')[0]
@@ -231,24 +231,26 @@ def main(
     data_dir, video_name = os.path.split(video_path)
     save_csv_path = str(predict_test) + '_train_hand_acc.csv'
 
+    device = '/gpu:0'
     # TrackPoint
     get5dir(
         video_path, device
     )    # get 5 dir
 
-    # # generateDataset with labal
-    # generateDataset(
-    #     source_main_dir = Path(predict_test),
-    #     target_main_dir = Path(predict_test),
-    #     image_main_dir = Path(predict_test),
-    #     data_types = ['.'], 
-    #     source_sub_dir_name = 'image'
-    # )   # get hit dir
+    # generateDataset with labal
+    generateDataset(
+        source_main_dir = Path(predict_test),
+        target_main_dir = Path(predict_test),
+        image_main_dir = Path(predict_test),
+        data_types = ['.'], 
+        source_sub_dir_name = 'image'
+    )   # get hit dir
 
     # without labal
     # os.rename(f'{data_dir}/ball_mask5_dir', f'{data_dir}/hit')
-    shutil.copyfile(f'{data_dir}/ball_mask5_dir', f'{data_dir}/hit')
+    # shutil.copyfile(f'{data_dir}/ball_mask5_dir', f'{data_dir}/hit')
 
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     # testing
     testing(
         test_dir = Path(predict_test),    # 'Data/Paper_used/pre_process/frame13' / 'test'
@@ -256,18 +258,19 @@ def main(
         source_dir = Path(predict_test),
         sub_dir = 'ball_mask5_dir',
         save_csv_path = save_csv_path,
+        model_path = 'Model/model/bestLoss-Sum.pt', 
         device=device
     )   # get csv
 
     pass
 
 if __name__ == '__main__':
+    tt = time.time()
 
-    # video_path = 'Data/predict_test/00001.mp4'
-    video_path = 'Data/predict_test/00001/00001/00001.mp4'
+    video_path = 'Data/predict_test/00001.mp4'
+    # video_path = 'Data/predict_test/00001/00001/00001.mp4'
     # video_path = 'Data/predict_test/00003.mp4'
-    
-
     main(video_path)
     
+    print('spend time = ', time.time() - tt)
     pass

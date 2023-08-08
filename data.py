@@ -48,7 +48,8 @@ def dataAnalyze_A(A_data):
         BallH:str = "low"
     else:
         BallH:str = "high"
-    print(f"Hitter A, RoundHead ratio is {round(RH_ratio, 2)}%, BackhandRatio is {round(BH_ratio, 2)}%, {BallH} Ballheight ")
+    print(f"Hitter A, RoundHead ratio is {round(RH_ratio, 2)}%, BackhandRatio is {round(BH_ratio, 2)}%, Average hit on {BallH} Ballheight ")
+    return BH_ratio
 
 def dataAnalyze_B(B_data):
     RH_ratio = 1 - (B_data[0] - B_data[3]) / B_data[3]
@@ -57,7 +58,14 @@ def dataAnalyze_B(B_data):
         BallH:str = "low"
     else:
         BallH:str = "high"
-    print(f"Hitter B, RoundHead ratio is {round(RH_ratio, 2)}%, BackhandRatio is {round(BH_ratio, 2)}%, {BallH} Ballheight ")
+    print(f"Hitter B, RoundHead ratio is {round(RH_ratio, 2)}%, BackhandRatio is {round(BH_ratio, 2)}%, Average hit on {BallH} Ballheight ")
+    return BH_ratio
+
+def initiaive(BH_ratioA, BH_ratioB):
+    if BH_ratioA >  BH_ratioB:
+        print('Hitter B take the initiative.')
+    else:
+        print('Hitter A take the initiative.')
 
 def get_maxYvalue(BT_A, BT_B):
     counterA = ct(BT_A)
@@ -110,8 +118,9 @@ if __name__ == '__main__':
     csv = read_csv2list(df)
     initial_analyze(csv)
     HitterA_data, Balltype_lists_A, HitterB_data, Balltype_lists_B = separateABdata(csv)
-    dataAnalyze_A(HitterA_data)
-    dataAnalyze_B(HitterB_data)
+    BH_ratioA = dataAnalyze_A(HitterA_data)
+    BH_ratioB = dataAnalyze_B(HitterB_data)
+    initiaive(BH_ratioA, BH_ratioB)
     maxY = get_maxYvalue(Balltype_lists_A, Balltype_lists_B)
     Data_VisualizationA(Balltype_lists_A, maxY)
     Data_VisualizationB(Balltype_lists_B, maxY)

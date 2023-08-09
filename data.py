@@ -3,26 +3,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter as ct
 
-index_mapping = {3: 'long', 4: 'flat', 5: 'smash', 6: 'net shot', 7: 'slice', 8: 'lofted', 9: 'push'}
-# csv to list
-def read_csv2list(df):
-    df_list = df.values.tolist()
-    return df_list
-
-def initial_analyze(df_list):
-    if df_list[0][12] == 1:
-        service:str = 'short service'
-    else:
-        service:str = 'high service'
-    print(f"In this match, serving side is Hitter {df_list[0][2]}, hitting a {service}.")
-    print(f"The winner is Hitter {df_list[len(df_list)-1][13]}.")
-
-# divide A B data
-def separateABdata(df_list):
+def data_analyze(game_info: pd.DataFrame = None) -> (str):
+    # parameters
+    index_mapping = {3: 'long', 4: 'flat', 5: 'smash', 6: 'net shot', 7: 'slice', 8: 'lofted', 9: 'push'}
     RoundHead_value_A = Backhand_value_A = Ballheight_value_A = 0
     RoundHead_value_B = Backhand_value_B = Ballheight_value_B = 0
     Balltype_lists_A = []
     Balltype_lists_B = []
+
+    # data to list
+    df_list = game_info.values.tolist()
+    if df_list[0][12] == 1:
+        service:str = 'short service'
+    else:
+        service:str = 'high service'
+    
+    # separate A B data
     for i in range(len(df_list) - 1):
         Hitter, RoundHead, Backhand, Ballheight = df_list[i + 1][2:6]
         Balltype= df_list[i + 1][12]
@@ -39,56 +35,45 @@ def separateABdata(df_list):
 
     HitterA_data = [RoundHead_value_A, Backhand_value_A, Ballheight_value_A, len(Balltype_lists_A)]
     HitterB_data = [RoundHead_value_B, Backhand_value_B, Ballheight_value_B, len(Balltype_lists_B)]
-    return HitterA_data, Balltype_lists_A, HitterB_data, Balltype_lists_B
-
-def dataAnalyze_A(A_data):
-    RH_ratio = 1 - (A_data[0] - A_data[3]) / A_data[3]
-    BH_ratio = 1 - (A_data[1] - A_data[3]) / A_data[3]
-    if A_data[2]/A_data[3] > 1.5:
-        BallH:str = "low"
+    # analyze A data
+    RH_ratio_A = 1 - (HitterA_data[0] - HitterA_data[3]) / HitterA_data[3]
+    BH_ratio_A = 1 - (HitterA_data[1] - HitterA_data[3]) / HitterA_data[3]
+    if HitterA_data[2]/HitterA_data[3] > 1.5:
+        BallHA:str = "low"
     else:
-        BallH:str = "high"
-    print(f"Hitter A, RoundHead ratio is {round(RH_ratio, 2)}%, BackhandRatio is {round(BH_ratio, 2)}%, Average hit on {BallH} Ballheight ")
-    return BH_ratio
-
-def dataAnalyze_B(B_data):
-    RH_ratio = 1 - (B_data[0] - B_data[3]) / B_data[3]
-    BH_ratio = 1 - (B_data[1] - B_data[3]) / B_data[3]
-    if B_data[2]/B_data[3] > 1.5:
-        BallH:str = "low"
+        BallHA:str = "high"
+    # analyze B data
+    RH_ratio_B = 1 - (HitterB_data[0] - HitterB_data[3]) / HitterB_data[3]
+    BH_ratio_B = 1 - (HitterB_data[1] - HitterB_data[3]) / HitterB_data[3]
+    if HitterB_data[2]/HitterB_data[3] > 1.5:
+        BallHB:str = "low"
     else:
-        BallH:str = "high"
-    print(f"Hitter B, RoundHead ratio is {round(RH_ratio, 2)}%, BackhandRatio is {round(BH_ratio, 2)}%, Average hit on {BallH} Ballheight ")
-    return BH_ratio
-
-def initiaive(BH_ratioA, BH_ratioB):
-    if BH_ratioA >  BH_ratioB:
-        print('Hitter B take the initiative.')
+        BallHB:str = "high"
+    # initiative
+    if BH_ratio_A >  BH_ratio_B:
+        initiative:str = 'Hitter B.'
     else:
-        print('Hitter A take the initiative.')
-
-def get_maxYvalue(BT_A, BT_B):
-    counterA = ct(BT_A)
-    counterB = ct(BT_B)
-    keys = range(3, 10)
-    maxA = max([counterA[key] for key in keys])
-    maxB = max([counterB[key] for key in keys])
+        initiative:str = 'Hitter A.'
+    # get max mapping value
+    counterA = ct(Balltype_lists_A)
+    counterB = ct(Balltype_lists_B)
+    max_keys = range(3, 10)
+    maxA = max([counterA[key] for key in max_keys])
+    maxB = max([counterB[key] for key in max_keys])
     maxY = 0
     if maxA > maxB:
         maxY = maxA
     else:
         maxY = maxB
-    return maxY
 
-def Data_VisualizationA(BT_A, maxY):
-    data_replaced_A = [index_mapping[num] if num in index_mapping else num for num in BT_A]
-    counter = ct(data_replaced_A)
-
-    keys = list(index_mapping.values())
-    values = [counter[key] for key in keys]
+    # plot A fig
+    data_replaced_A = [index_mapping[num] if num in index_mapping else num for num in Balltype_lists_A]
+    counter_A = ct(data_replaced_A)
+    keys_A = list(index_mapping.values())
+    values_A = [counter_A[key] for key in keys_A]
 
     plt.figure()
-    plt.bar(keys, values, color='skyblue', alpha=0.7)
+    plt.bar(keys_A, values_A, color='skyblue', alpha=0.7)
     plt.xlabel('Balltype')
     plt.ylabel('Frequency')
     plt.title('Balltype histogram')
@@ -96,16 +81,14 @@ def Data_VisualizationA(BT_A, maxY):
     plt.show()
     plt.savefig('HitterA.png')
 
-def Data_VisualizationB(BT_B, maxY):
-    index_mapping = {3: 'long', 4: 'flat', 5: 'smash', 6: 'net shot', 7: 'slice', 8: 'lofted', 9: 'push'}
-    data_replaced_B = [index_mapping[num] if num in index_mapping else num for num in BT_B]
-    counter = ct(data_replaced_B)
-
-    keys = list(index_mapping.values())
-    values = [counter[key] for key in keys]
+    # plot B fig
+    data_replaced_B = [index_mapping[num] if num in index_mapping else num for num in Balltype_lists_B]
+    counter_B = ct(data_replaced_B)
+    keys_B = list(index_mapping.values())
+    values_B = [counter_B[key] for key in keys_B]
 
     plt.figure()
-    plt.bar(keys, values, color='skyblue', alpha=0.7)
+    plt.bar(keys_B, values_B, color='skyblue', alpha=0.7)
     plt.xlabel('Balltype')
     plt.ylabel('Frequency')
     plt.title('Balltype histogram')
@@ -113,14 +96,16 @@ def Data_VisualizationB(BT_B, maxY):
     plt.show()
     plt.savefig('HitterB.png')
 
+    Match_info:str = f"In this match, serving side is Hitter {df_list[0][2]}, hitting a {service}.\n"
+    Winner_info:str = f"The winner is Hitter {df_list[len(df_list)-1][13]}.\n"
+    HitterA_info:str = f"Hitter A, RoundHead ratio is {round(RH_ratio_A, 2)}%, BackhandRatio is {round(BH_ratio_A, 2)}%, Average hit on {BallHA} Ballheight.\n"
+    HitterB_info:str = f"Hitter B, RoundHead ratio is {round(RH_ratio_B, 2)}%, BackhandRatio is {round(BH_ratio_B, 2)}%, Average hit on {BallHB} Ballheight.\n"
+    Initiative_info:str = f"{initiative} take the initiative."
+
+    ret_str:str = Match_info + Winner_info + HitterA_info +HitterB_info + Initiative_info
+    
+    return ret_str
+
 if __name__ == '__main__':
-    df = pd.read_csv("00001_S2.csv")
-    csv = read_csv2list(df)
-    initial_analyze(csv)
-    HitterA_data, Balltype_lists_A, HitterB_data, Balltype_lists_B = separateABdata(csv)
-    BH_ratioA = dataAnalyze_A(HitterA_data)
-    BH_ratioB = dataAnalyze_B(HitterB_data)
-    initiaive(BH_ratioA, BH_ratioB)
-    maxY = get_maxYvalue(Balltype_lists_A, Balltype_lists_B)
-    Data_VisualizationA(Balltype_lists_A, maxY)
-    Data_VisualizationB(Balltype_lists_B, maxY)
+    string = data_analyze(pd.read_csv("00001_S2.csv"))
+    print(string)

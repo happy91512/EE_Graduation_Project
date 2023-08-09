@@ -205,10 +205,9 @@ def testing(
     df.insert(0, column="ShotSeq", value=range(1, len(df.index)+1))
     df.to_csv(save_csv_path)
 
-    print(df)
-    pass
+    return df
 
-def main(
+def get_game_infor(
     video_path:str
 ):
 
@@ -253,7 +252,7 @@ def main(
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     # testing
-    testing(
+    df = testing(
         test_dir = Path(predict_test),    # 'Data/Paper_used/pre_process/frame13' / 'test'
         target_dir = Path(predict_test),
         source_dir = Path(predict_test),
@@ -263,7 +262,7 @@ def main(
         device=device
     )   # get csv
 
-    pass
+    return df
 
 if __name__ == '__main__':
     tt = time.time()
@@ -271,7 +270,8 @@ if __name__ == '__main__':
     video_path = PROJECT_DIR/'Data/predict_test/00001.mp4'
     # video_path = 'Data/predict_test/00001/00001/00001.mp4'
     # video_path = 'Data/predict_test/00003.mp4'
-    main(str(video_path))
-    
+    df = get_game_infor(str(video_path))
+    print(df)
+
     print('spend time = ', time.time() - tt)
     pass

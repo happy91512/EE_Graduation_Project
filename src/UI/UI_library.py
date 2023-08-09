@@ -2,10 +2,16 @@ import pandas as pd
 import cv2
 import sys
 import numpy as np
+from PyQt6 import QtWidgets
 from PyQt6.QtCore import QAbstractTableModel, Qt
 from PyQt6.QtGui import QImage, QPixmap, QPainter
 # from src.UI.UI_controller import VideoThread
 from pathlib import Path
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+matplotlib.use("Qt5Agg")
+
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 class pandasModel(QAbstractTableModel):
     def __init__(self, data):
@@ -57,15 +63,26 @@ def cut2round(qt_img: QPixmap):
 def check_video_thread(thread):
     if thread == None: 
         return
-    elif thread.isRunning(): 
-        thread.terminate()
-        return
+    elif thread.isRunning():
+        thread.stop = True
     
 def get_time_format(frame_count, fps):
     secs = int(frame_count/fps)
     mins = int(secs / 60)
     secs = secs % 60
     return f"{mins:02d}:{secs:02d}"
+
+# def show_fig(graphicsView : QtWidgets.QGraphicsView, canvas : FigureCanvas):
+#     graphicscene = QtWidgets.QGraphicsScene()
+#     graphicscene.
+#     graphicsView.setScene(graphicscene)
+
+def plt_figure2array(fig):
+    canvas = FigureCanvas(fig)
+    canvas.draw()
+    width, height = fig.get_size_inches() * fig.get_dpi()
+    image_array = np.frombuffer(canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
+    return image_array
 
 if __name__ == '__main__':
     csv_path = 'saved_csv/00001_S2.csv'

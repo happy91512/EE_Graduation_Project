@@ -146,7 +146,26 @@ border-style: outset;
      <height>311</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout"/>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="figure">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="figure_2">
+      <property name="styleSheet">
+       <string notr="true">border-radius: 10px;
+border-style: outset;</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
@@ -166,6 +185,9 @@ background:rgb(230, 230, 230);</string>
     <string/>
    </property>
    <widget class="QRadioButton" name="radioButton_7">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>214</x>
@@ -179,6 +201,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_3">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>428</x>
@@ -192,6 +217,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_5">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>856</x>
@@ -205,6 +233,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_2">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>214</x>
@@ -218,6 +249,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_4">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>642</x>
@@ -231,6 +265,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_9">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>642</x>
@@ -244,6 +281,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_8">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>428</x>
@@ -257,6 +297,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_1">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -270,6 +313,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_10">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>856</x>
@@ -283,6 +329,9 @@ background:rgb(230, 230, 230);</string>
     </property>
    </widget>
    <widget class="QRadioButton" name="radioButton_6">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>

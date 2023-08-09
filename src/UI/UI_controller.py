@@ -1,31 +1,52 @@
+from typing import Any
 import cv2
 import time
 import numpy as np
 import pandas as pd
 import PyQt6
+
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QFileDialog, QHeaderView, QWidget
-from PyQt6.QtCore import *
+from PyQt6.QtCore import pyqtSignal, QThread, pyqtSlot
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+matplotlib.use("Qt5Agg")
 import sys
 
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-# print(sys.path)
-from src.UI.UI_library import pandasModel, select_show_columns, convert_cv_qt, check_video_thread, get_time_format, cut2round
+from src.UI.UI_library import pandasModel, select_show_columns, convert_cv_qt, check_video_thread, get_time_format, cut2round, plt_figure2array
 from src.UI.UI import Ui_MainWindow
 from src.UI.csv_page import Ui_new_page
+from src.data import analyze
 
+
+class DetectThread(QThread):
+    dataframe_signal = pyqtSignal(tuple)
+    def __init__(self, filename, number):
+        super().__init__()
+        self.number = number
+    def run(self):
+        pass
+        cv2.waitKey(6000)
+        self.dataframe_signal.emit((pd.DataFrame([1, 2, 3]), self.number))
+        return 
+
+    
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
     slider_setup_signal = pyqtSignal(tuple)
-    def __init__(self, source, frame_target = None, jump = False):
+    def __init__(self, source, frame_target = None, jump = False, stop = False):
         super().__init__()
         self.source = source
         self.frame_target = frame_target
         self.jump = jump
         self.pause = False
+        self.stop = stop
         
     def run(self):
         cap = cv2.VideoCapture(self.source, self.frame_target)
@@ -48,8 +69,12 @@ class VideoThread(QThread):
             try:    
                 self.change_pixmap_signal.emit(self.frame)
                 time.sleep(1 / fps * 0.81)
-            except:continue
             
+            except:continue
+            if self.stop:
+                return
+    def cancel(self):
+        self.requestInterruption() 
 class MainWindow_controller(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -70,6 +95,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.target_frame_his = [0, 1]
         self.path_history = []
         self.temp = []
+        self.figA, self.figB = plt.figure(), plt.figure()
+        self.analyze_history = [False] * 10
+        self.detect_done = [bool(ele) for ele in self.analyze_history]
+        self.detect_thread = [None] * 10
+        self.df = pd.read_csv('saved_csv/00001_S2.csv')
         for radio_button in self.ui_radiolist:
             radio_button.setVisible(False)
         for gif in self.ui_giflist:
@@ -95,12 +125,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.temp = self.checklist
         self.filename = self.path_history[self.checklist.index(True)]
         self.ui.show_path.setText(f"Successfully open {self.filename}!")
+        if bool(self.analyze_history[self.checklist.index(True)]) == True:
+            self.ui.show_analysis.setText(self.analyze_history[self.checklist.index(True)][0])
         self.run_video()
-
+        
     def show_ratio_button(self, target_radiolist:list[QtWidgets.QRadioButton]):
         target_radiolist = [target_radiolist]
         len_limit = [16]
-        self.show_gif()
         if hasattr(self, 'nw'):
             target_radiolist.append(self.nw_radiolist)
             len_limit.append(23)
@@ -116,13 +147,15 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                 radio_list[self.video_count - 1].setChecked(True)
     
     def show_gif(self):
-        gif_movie = QMovie('./loading.gif')
-        gif_movie.setScaledSize(self.ui.gif_1.size())
+        gif_loading = QMovie('./loading.gif')
+        gif_loading.setScaledSize(self.ui.gif_1.size())
+        gif_done = QMovie('./done.gif')
+        gif_done.setScaledSize(self.ui.gif_1.size())
         for i in range(self.video_count):
             self.ui_giflist[i].setVisible(True)
-            self.ui_giflist[i].setMovie(gif_movie)
-        gif_movie.start()
-
+            self.ui_giflist[i].setMovie(gif_loading if self.detect_done[i] == False else gif_done)
+        gif_loading.start()
+        gif_done.start()
 
     def select_video(self):
         self.filename, filetype = QFileDialog.getOpenFileName(self, "Open file", "./", filter = "*.avi *.mp4 *.wmv *.mov")# start path 
@@ -133,10 +166,33 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.ui.show_path.setText("The video had been selected!")
             self.ui_radiolist[self.path_history.index(self.filename)].setChecked(True)
         else:
-            self.path_history.append(self.filename)
+            self.path_history.append(self.filename) 
             self.video_count += 1
+            self.run_detection()
             self.show_ratio_button(self.ui_radiolist)
-            
+
+    def run_detection(self):
+        self.show_gif()
+        number = self.path_history.index(self.filename)
+        self.detect_thread[number] = DetectThread(self.filename, number)
+        self.detect_thread[number].dataframe_signal.connect(self.check_detect_state)
+        self.detect_thread[number].start()
+        
+    @pyqtSlot(tuple)
+    def check_detect_state(self, df_tuple):
+        df, num = df_tuple
+        #! need to be modified
+        df = self.df
+        self.str_list, self.figA, self.figB = analyze(df)
+        self.analyze_history[num] = [str(num)+'\n'+self.str_list, df, self.figA, self.figB]
+        self.detect_done = [bool(ele) for ele in self.analyze_history]
+        if hasattr(self, 'nw'):
+            for i, e in enumerate(self.detect_done):
+                self.nw_radiolist[i].setDisabled(not e)
+             
+        self.ui.show_analysis.setText(self.analyze_history[num][0])
+        self.show_gif()
+
     def run_video(self):
         check_video_thread(self.video_thread)
         self.setup_button()
@@ -179,14 +235,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.video_thread.pause = not(self.video_thread.pause)
         self.ui.slider.setDisabled(self.video_thread.pause)
 
-
     def open_page(self):
         self.newWindow = QtWidgets.QMainWindow()
         self.nw = Ui_new_page()
         self.nw.setupUi(self.newWindow)
         self.newWindow.show()
         self.setup_nw_control()
-        self.change_csv()
+        self.setup_nw_default()
         self.show_ratio_button(self.nw_radiolist)
 
     def setup_nw_control(self):  
@@ -197,21 +252,37 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         for radio_button in self.nw_radiolist:
             radio_button.setVisible(False)
             radio_button.toggled.connect(self.change_csv)
-        
+            radio_button.toggled.connect(self.update_figure)
+
+    def setup_nw_default(self):
+        for i, e in enumerate(self.detect_done):
+                self.nw_radiolist[i].setDisabled(not e)
+
     def check_df(self):
         self.checklist = [wiget.isChecked() for wiget in self.nw_radiolist]
         if self.temp == self.checklist:
             return
         self.temp = self.checklist
-        csv_path = self.path_history[self.checklist.index(True)]
-
+        # csv_path = self.path_history[self.checklist.index(True)]
 
     def change_csv(self):
         checkbox_state = [box.isChecked() for box in self.checkboxes]
-        df = pd.read_csv('saved_csv/00001_S2.csv').iloc[:, :len(checkbox_state)]
-        show_df = select_show_columns(df, checkbox_state)  if True in checkbox_state else pd.DataFrame([['Select'],['one'],['column']]).T
+        # self.df = self.analyze_history[self.checklist.index(True)][1]
+        show_df = pd.read_csv('saved_csv/00001_S2.csv').iloc[:, :len(checkbox_state)]
+        show_df = select_show_columns(show_df, checkbox_state)  if True in checkbox_state else pd.DataFrame([['Select'],['one'],['column']]).T
         self.model = pandasModel(show_df)
         self.nw.tableView.setModel(self.model)
         header = self.nw.tableView.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
+    def update_figure(self):
+        fig_list = [self.nw.figure, self.nw.figure_2]
+        self.figA, self.figB = self.analyze_history[self.checklist.index(True)][2:4]
+        view_width, view_height = self.nw.figure.width(), self.nw.figure.height()
+        for i, fig in enumerate([self.figA, self.figB]):
+            fig.set_size_inches(view_width / 110, view_height / 120)
+            img = plt_figure2array(fig)
+            qt_img = convert_cv_qt(img, view_height)
+            round_qt_img = cut2round(qt_img)
+            fig_list[i].setPixmap(round_qt_img)
+            

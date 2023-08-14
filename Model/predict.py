@@ -45,9 +45,9 @@ class TrackDebug:
 
         check2create_dir(str(self.dir))
         check2create_dir(str(self.image_dir))
-        # check2create_dir(str(self.predict_dir))
-        # check2create_dir(str(self.mask_dir))
-        # check2create_dir(str(self.predict_merge_dir))
+        check2create_dir(str(self.predict_dir)) # useless but dont run again
+        check2create_dir(str(self.mask_dir))    # useless but dont run again
+        check2create_dir(str(self.predict_merge_dir)) # useless but dont run again
         check2create_dir(str(self.ball_mask5_dir))
 
 def get5dir(
@@ -55,11 +55,7 @@ def get5dir(
         device:str='cpu'
     ):
 
-    # data_dir:str = 'Data/train'
     data_dir = str(Path(video_path).parents[1])
-    # print(video_path.split(data_dir+'/')[-1])
-    # data_dir = video_path.rstrip('/' + video_path.split('/')[-1])
-    # data_dir = 'Data/z_org_val'
 
     DEBUG_LS = [
         'update_frame',
@@ -70,10 +66,6 @@ def get5dir(
     with tf.device(device):
         tNet33 = TrackNetV2_33(PROJECT_DIR/'submodules/TrackNetv2/3_in_3_out/model906_30')
 
-
-        # for multiple dir
-        # filenames: List[str] = get_filenames(data_dir, '*.mp4', withDirPath=False)
-        # filenames.sort(reverse=True)
         filenames: List[str] =  [video_path.split(data_dir+'/')[-1]]
 
         rest_data = 0
@@ -155,7 +147,7 @@ def testing(
     source_dir:str = 'Data/AIdea_used/pre-process',
     sub_dir:str = 'ball_mask5_dir',
     save_csv_path:str = 'train_hand_acc.csv',
-    model_path:str = 'Model/model/bestLoss-Sum.pt', 
+    model_path:str = 'model/bestLoss-Sum.pt', 
     device:str = 'cpu'
 ):
     side_range = 1
@@ -200,6 +192,12 @@ def testing(
     df = model_perform.acc_df.astype(int)
     for i in range(len(df.index)):
         df.loc[i, "HitFrame"] += start_idx_list[i]
+        if df.loc[i, "Hitter"]==0:  df.loc[i, "Hitter"] = 'A'
+        else: df.loc[i, "Hitter"] = 'B'
+        df.loc[i, "RoundHead"] += 1
+        df.loc[i, "Backhand"] += 1
+        df.loc[i, "BallHeight"] += 1
+        # df.loc[i, "Hitter"] += 1
         continue
     df = df.sort_values(by='HitFrame', ignore_index=True)
     df.insert(0, column="ShotSeq", value=range(1, len(df.index)+1))
@@ -258,7 +256,7 @@ def get_game_infor(
         source_dir = Path(predict_test),
         sub_dir = 'ball_mask5_dir',
         save_csv_path = save_csv_path,
-        model_path = str(PROJECT_DIR/'Model/model/bestLoss-Sum.pt'), 
+        model_path = str(PROJECT_DIR/'model/bestLoss-Sum.pt'), 
         device=device
     )   # get csv
 
@@ -267,9 +265,13 @@ def get_game_infor(
 if __name__ == '__main__':
     tt = time.time()
 
-    video_path = PROJECT_DIR/'Data/predict_test/00001.mp4'
+    print(PROJECT_DIR) # PROJECT_DIR = .../Model/
+
+    # video_path = PROJECT_DIR/'Data/predict_test/00001.mp4'
     # video_path = 'Data/predict_test/00001/00001/00001.mp4'
     # video_path = 'Data/predict_test/00003.mp4'
+    video_path = 'Model/Data/predict_test/00001.mp4'
+
     df = get_game_infor(str(video_path))
     print(df)
 

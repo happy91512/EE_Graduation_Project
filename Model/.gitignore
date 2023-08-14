@@ -1,0 +1,5 @@
+Model/Data
+Model/model/*.zip
+Model/model/*.pt
+Model/model/*.pickle
+Model/submodules/TrackNetv2/3_in_3_out/model906_30

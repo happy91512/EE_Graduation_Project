@@ -35,16 +35,12 @@ class TestEvaluate:
     def handcraft(self, pred: torch.Tensor, video_id: int, data_id: int, start_idx: int):
         idx = int(np.where(self.correspond_table == video_id)[0])
         start_idx += data_id + self.side
-        # start_idx += data_id
-        # print(start_idx)
-        # print(handcraft_table_ls[idx][start_idx : start_idx + self.len_one_data])
         handcraft = self.handcraft_table_ls[idx][start_idx : start_idx + self.len_one_data]
         if handcraft.shape[0] == self.len_one_data:
             pred[: self.len_one_data] += handcraft
         return pred
 
     def predict(self):  # , withHandCraft: bool = False):
-        acc_records = np.zeros((len(self.dataset), len(model_acc_names)), dtype=np.float32)
         acc_hand_records = np.zeros((len(self.dataset), len(model_acc_names)), dtype=np.float32)
         self.model.eval()
         start_idx_list = []
@@ -70,15 +66,8 @@ class TestEvaluate:
                 label[:, BadmintonNetOperator.end_idx_orders[-2] + 1 :: 2] = batch_coordXYs[1]
 
                 pred = self.model(data).cpu()
-                # print('pred:',pred) # perdict data
-                acc_records[self.order_id, :] += self.acc_func(pred, label, hit_idxs, isHits).cpu().numpy()
-
-                # if withHandCraft:
-                #     pred = self.handcraft(pred.squeeze(), video_id, data_id, start_idx).unsqueeze(dim=0)
                 pred = self.handcraft(pred.squeeze(), video_id, data_id, start_idx).unsqueeze(dim=0)
-                # print('hand pred:',pred)
                 acc_hand_records[self.order_id, :] += self.acc_func(pred, label, hit_idxs, isHits).cpu().numpy()
-
                 start_idx_list.append(start_idx + data_id + self.side)
 
-        return acc_records, acc_hand_records, start_idx_list
+        return acc_hand_records, start_idx_list

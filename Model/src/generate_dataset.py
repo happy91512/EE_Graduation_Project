@@ -49,7 +49,7 @@ def generate_hit_datasets(df: pd.DataFrame, max_frame_id: int, img_dir: Path, ta
             break
 
         imgs = torch.tensor(
-            np.stack([cv2.imread(str(img_dir / f'{idx}.jpg'), cv2.COLOR_BGR2RGB).transpose(2, 0, 1) for idx in frame_seq_nums])
+            np.stack([cv2.imread(str(f'{img_dir}/{idx}.jpg'), cv2.COLOR_BGR2RGB).transpose(2, 0, 1) for idx in frame_seq_nums])
         )
 
         save_pickle((imgs, process_label), str(target_dir / f'{frame_start}.pickle'))

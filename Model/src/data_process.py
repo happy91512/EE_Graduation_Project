@@ -73,8 +73,9 @@ class Frame13Dataset(Dataset):
 
     def __getitem__(self, idx):
         data: torch.Tensor
-        label: torch.Tensor
+        # label: torch.Tensor
         data, label = load_pickle(str(self.dataset_info.data_dir / self.dataset_paths[idx]))
+        # data = load_pickle(str(self.dataset_info.data_dir / self.dataset_paths[idx]))
 
         start_idx = random.choice(self.choice_range)
 
@@ -93,6 +94,7 @@ class Frame13Dataset(Dataset):
         label = torch.concat([label_hitFrame, label])
 
         return data, label, torch.tensor(hitFrame_label_idx, dtype=torch.int8), torch.tensor(isHitData, dtype=torch.bool), start_idx
+        # return data, torch.tensor(hitFrame_label_idx, dtype=torch.int8), torch.tensor(isHitData, dtype=torch.bool), start_idx
 
     def __len__(self):
         return self.len_dataset_path

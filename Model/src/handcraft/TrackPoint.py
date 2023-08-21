@@ -3,46 +3,25 @@ from typing import List, Tuple, Union
 
 import numpy as np
 import cv2
-import tensorflow as tf
-
-PROJECT_DIR = Path(__file__).resolve().parents[2]
-if __name__ == '__main__':
-    import sys
-
-    sys.path.append(str(PROJECT_DIR))
 
 from src.handcraft.TrackNetv2_33_predict import TrackNetV2_33
-from submodules.UsefulTools.FileTools.FileOperator import check2create_dir, get_filenames
-from submodules.UsefulTools.FileTools.PickleOperator import save_pickle
-from submodules.UsefulTools.FileTools.WordOperator import str_format
-
+from submodules.UsefulTools.FileTools.FileOperator import check2create_dir
 
 class TrackDebug:
     dir = Path('Data/Paper_used/pre_process')
     image_dir = Path('image')
-    predict_dir = Path('predict')
-    mask_dir = Path('mask')
-    predict_merge_dir = Path('predict_merge')
     ball_mask5_dir = Path('ball_mask5_dir')
     HEIGHT = 288
     WIDTH = 512
 
-    def __init__(self, data_id) -> None:
-        self.dir = TrackDebug.dir / data_id
+    def __init__(self,data_dir, data_id) -> None:
+        self.dir = data_dir / data_id
         self.image_dir = self.dir / TrackDebug.image_dir
-        self.image_dir = self.dir / TrackDebug.image_dir
-        self.mask_dir = self.dir / TrackDebug.mask_dir
-        self.predict_dir = self.dir / TrackDebug.predict_dir
-        self.predict_merge_dir = self.dir / TrackDebug.predict_merge_dir
         self.ball_mask5_dir = self.dir / TrackDebug.ball_mask5_dir
 
         check2create_dir(str(self.dir))
         check2create_dir(str(self.image_dir))
-        check2create_dir(str(self.predict_dir))
-        check2create_dir(str(self.mask_dir))
-        check2create_dir(str(self.predict_merge_dir))
         check2create_dir(str(self.ball_mask5_dir))
-
 
 class TrackPoint:
     def __init__(self, img_size: Tuple[int], num_frame: int, model: TrackNetV2_33, debugger: Union[TrackDebug, None] = None) -> None:
@@ -176,8 +155,6 @@ class TrackPoint:
         for i in range(2):
             points_arr[nan_idxs, i] = np.interp(nan_idxs.nonzero()[0], no_nan_idxs.nonzero()[0], points_arr[no_nan_idxs, i])
 
-        # bb = aa[no_nan_idxs] - points_arr[no_nan_idxs]
-
         vectors_arr = points_arr[:-1] - points_arr[1:]
         vectors_dist_arr = np.linalg.norm(vectors_arr[:-1] - vectors_arr[1:], axis=1)
 
@@ -207,95 +184,7 @@ class TrackPoint:
                     continue
                 cv2.circle(masks5[i + 2], points_arr[hit_frame + i], 5, 255, -1)
 
-            # cv2.imshow(f'hit_frame: {hit_frame}', np.uint8(masks5[2]))
-
             masks5 += np.sum(self.total_masks3[hit_frame - 2 : hit_frame + 3], axis=1)
-
             masks5_ls.append(np.uint8(masks5))
 
-            # if isDebug:
-            #     cv2.imshow(f'hit_frame: {hit_frame} merge', np.uint8(masks5[2]))
-
-        if isDebug:
-            for i, point_arr in enumerate(points_arr, start=1):
-                mask = np.zeros(self.img_size, dtype=np.uint16)
-                cv2.circle(mask, point_arr, 5, 255, -1)
-                mask += np.sum(self.total_masks3[i - 1], axis=0)
-                cv2.imwrite(str(self.debugger.mask_dir / f'{i}.jpg'), np.uint8(mask))
-
-                img = cv2.imread(str(self.debugger.image_dir / f'{i}.jpg'))
-                img[mask > 0] = (255, 255, 255)
-                cv2.imwrite(str(self.debugger.predict_merge_dir / f'{i}.jpg'), np.uint8(img))
-
         return masks5_ls, hit_frames - 2  # the list of the masks5, and each masks5 corresponding start frame
-
-
-if __name__ == '__main__':
-    DEBUG_LS = [
-        'update_frame',
-        'predict',
-        'get_hitRangeMasks5',
-    ]
-
-    data_dir = 'Data/part1/val'
-    # data_dir = 'Data/Paper_used/pre_process'
-    # data_dir = 'Data/Paper_used/train'
-
-    with tf.device('cpu'):
-        tNet33 = TrackNetV2_33('submodules/TrackNetv2/3_in_3_out/model906_30')
-
-        # for multiple dir
-        filenames: List[str] = get_filenames(data_dir, '*.mp4', withDirPath=False)
-        filenames.sort(reverse=True)
-
-        # import os
-        # already_filenames = sorted(os.listdir('Data/result'), reverse=True)
-        # [filenames.pop(int(f) - 1) for f in already_filenames]
-
-        # filenames = filenames[len(filenames) // 2 :]
-
-        # for one dir test
-        # DEBUG_LS = []
-        # filenames = ['00041/00041.mp4']
-
-        # filenames = filenames[149:230]
-        # filenames = filenames[350:]
-        # filenames = filenames[330:550] 317, 159
-        # filenames = filenames[550:]
-        # filenames = sorted(filenames[:239], reverse=True)
-        rest_data = 0
-        for filename in filenames:
-            data_id = filename.split('/')[0]
-            debugger = TrackDebug(data_id)
-
-            # checker
-            check_ls = get_filenames(str(debugger.predict_merge_dir), '*.jpg')
-            if len(check_ls) != 0:
-                continue
-            rest_data += 1
-
-            print(str_format(filename, fore='y'))
-
-            cap = cv2.VideoCapture(f'{data_dir}/{filename}')
-            FRAME = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            HIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-            tp = TrackPoint((HIGHT, WIDTH), FRAME, model=tNet33, debugger=debugger)
-
-            for _ in range(FRAME):
-                ret, frame = cap.read()
-                if ret is False:
-                    tp.currentFrame += 1
-                    continue
-                tp.update_frame(frame, isDebug='update_frame' in DEBUG_LS)
-                tp.predict(isDebug='predict' in DEBUG_LS)
-
-            masks5_ls, mask5startFrames = tp.get_hitRangeMasks5(isDebug='get_hitRangeMasks5' in DEBUG_LS)
-
-            for mask5, mask5startFrame in zip(masks5_ls, mask5startFrames):
-                save_pickle(mask5, f'{debugger.ball_mask5_dir}/{mask5startFrame}.pickle')
-
-            cap.release()
-
-    print(str_format(f"rest: {rest_data}", fore='y'))

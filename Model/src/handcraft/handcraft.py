@@ -1,34 +1,10 @@
-import os, random
-from pathlib import Path
+import os
 from typing import List, Tuple
 
 import numpy as np
 import torch
 
-PROJECT_DIR = Path(__file__).resolve().parents[2]
-if __name__ == '__main__':
-    import sys
-
-    sys.path.append(str(PROJECT_DIR))
-
-from src.data_process import DatasetInfo
 from submodules.UsefulTools.FileTools.FileOperator import get_filenames
-
-
-def order_data(dataset_infos: List[DatasetInfo], len_dataset: int):
-    data_order_ls = []
-    data_id2startIdx_arr = np.zeros((len_dataset, 2), dtype=np.uint32)
-    continue_idx = 0
-    for i, dataset_info in enumerate(dataset_infos):
-        data_id2startIdx_arr[i] = dataset_info.id, continue_idx
-        pickle_paths = [*dataset_info.hit_pickle_paths, *dataset_info.miss_pickle_paths]
-        start_idxs = [int(pickle_path.split('/')[-1].split('.')[0]) for pickle_path in pickle_paths]
-        data_order_ls.extend(start_idxs)
-        continue_idx += len(pickle_paths)
-
-    data_order_arr = np.array(data_order_ls, dtype=np.int64)
-
-    return data_id2startIdx_arr, data_order_arr
 
 
 def get_static_handcraft_table(target_dir: str, data_dir: str, sub_dir: str, side: int) -> Tuple[List[np.ndarray], np.ndarray]:
@@ -61,15 +37,5 @@ def get_static_handcraft_table(target_dir: str, data_dir: str, sub_dir: str, sid
 
     correspond_table = np.array([*map(int, data_ids)], dtype=np.int16)
 
-    print(video_startIDs_ls)
+    # print(video_startIDs_ls)
     return handcraft_table_ls, correspond_table
-
-
-if __name__ == '__main__':
-    target_dir = 'Data/Paper_used/test'
-    source_dir = 'Data/AIdea_used/pre-process'
-    sub_dir = 'ball_mask5_dir'
-
-    handcraft_table_ls, correspond_table = get_static_handcraft_table(target_dir, source_dir, sub_dir, 1)
-    print(handcraft_table_ls[0].shape)
-    print(correspond_table)

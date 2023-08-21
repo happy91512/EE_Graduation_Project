@@ -13,98 +13,57 @@ from submodules.UsefulTools.FileTools.FileOperator import get_filenames, check2c
 from submodules.UsefulTools.FileTools.PickleOperator import save_pickle
 from src.net.net import BadmintonNet, BadmintonNetOperator
 from src.testing import TestEvaluate
-from src.training import ModelPerform
 from src.transforms import IterativeCustomCompose
 from src.data_process import DatasetInfo, Frame13Dataset  # , get_test_dataloader
-from src.evaluate.accuracy import calculate, model_acc_names
+from src.accuracy import calculate, model_acc_names
 from src.handcraft.handcraft import get_static_handcraft_table
-from src.handcraft.TrackPoint import TrackPoint
-from src.pre_process.generate_dataset import generate_hit_datasets,generate_miss_datasets
+from src.handcraft.TrackPoint import TrackPoint, TrackDebug
+from src.generate_dataset import generate_hit_datasets
 from src.handcraft.TrackNetv2_33_predict import TrackNetV2_33
 
 PROJECT_DIR = Path(__file__).resolve().parents[0]
 
-class TrackDebug:
-    dir = Path('Data/Paper_used/pre_process')
-    image_dir = Path('image')
-    predict_dir = Path('predict')
-    mask_dir = Path('mask')
-    predict_merge_dir = Path('predict_merge')
-    ball_mask5_dir = Path('ball_mask5_dir')
-    HEIGHT = 288
-    WIDTH = 512
-
-    def __init__(self,data_dir, data_id) -> None:
-        self.dir = data_dir / data_id
-        self.image_dir = self.dir / TrackDebug.image_dir
-        self.image_dir = self.dir / TrackDebug.image_dir
-        self.mask_dir = self.dir / TrackDebug.mask_dir
-        self.predict_dir = self.dir / TrackDebug.predict_dir
-        self.predict_merge_dir = self.dir / TrackDebug.predict_merge_dir
-        self.ball_mask5_dir = self.dir / TrackDebug.ball_mask5_dir
-
-        check2create_dir(str(self.dir))
-        check2create_dir(str(self.image_dir))
-        check2create_dir(str(self.predict_dir)) # useless but dont run again
-        check2create_dir(str(self.mask_dir))    # useless but dont run again
-        check2create_dir(str(self.predict_merge_dir)) # useless but dont run again
-        check2create_dir(str(self.ball_mask5_dir))
-
 def get5dir(
-        video_path:str = 'Data/predict_test/00001/00001.mp4', 
-        device:str='cpu'
+        data_dir:str = 'Data/predict_test/00001',
+        filename:str = '00001/00001.mp4',
+        data_id:str = '00001',
+        device:str='/gpu:0'
     ):
-
-    data_dir = str(Path(video_path).parents[1])
-
     DEBUG_LS = [
         'update_frame',
-        # 'predict',
-        # 'get_hitRangeMasks5',
     ]
-
     with tf.device(device):
         tNet33 = TrackNetV2_33(PROJECT_DIR/'submodules/TrackNetv2/3_in_3_out/model906_30')
 
-        filenames: List[str] =  [video_path.split(data_dir+'/')[-1]]
+        debugger = TrackDebug(Path(data_dir), data_id)
+        
+        # checker
+        check_ls = get_filenames(str(debugger.image_dir), '*.jpg')
+        if not len(check_ls) == 0:
+            return
 
-        rest_data = 0
-        for filename in filenames:
-            data_id = filename.split('/')[0]
-            debugger = TrackDebug(Path(data_dir), data_id)
+        print(str_format(filename, fore='y'))
 
-            # checker
-            check_ls = get_filenames(str(debugger.predict_merge_dir), '*.jpg')
-            if len(check_ls) != 0:
+        cap = cv2.VideoCapture(f'{data_dir}/{filename}')
+        FRAME = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        HIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        tp = TrackPoint((HIGHT, WIDTH), FRAME, model=tNet33, debugger=debugger)
+        for _ in range(FRAME):
+            ret, frame = cap.read()
+            if ret is False:
+                tp.currentFrame += 1
                 continue
-            rest_data += 1
+            tp.update_frame(frame, isDebug='update_frame' in DEBUG_LS)
+            tp.predict(isDebug='predict' in DEBUG_LS)
+        masks5_ls, mask5startFrames = tp.get_hitRangeMasks5(isDebug='get_hitRangeMasks5' in DEBUG_LS)
 
-            print(str_format(filename, fore='y'))
+        for mask5, mask5startFrame in zip(masks5_ls, mask5startFrames):
+            save_pickle(mask5, f'{debugger.ball_mask5_dir}/{mask5startFrame}.pickle')
+        cap.release()
 
-            cap = cv2.VideoCapture(f'{data_dir}/{filename}')
-            FRAME = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            HIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-            tp = TrackPoint((HIGHT, WIDTH), FRAME, model=tNet33, debugger=debugger)
-
-            for _ in range(FRAME):
-                ret, frame = cap.read()
-                if ret is False:
-                    tp.currentFrame += 1
-                    continue
-                tp.update_frame(frame, isDebug='update_frame' in DEBUG_LS)
-                tp.predict(isDebug='predict' in DEBUG_LS)
-
-            masks5_ls, mask5startFrames = tp.get_hitRangeMasks5(isDebug='get_hitRangeMasks5' in DEBUG_LS)
-
-            for mask5, mask5startFrame in zip(masks5_ls, mask5startFrames):
-                save_pickle(mask5, f'{debugger.ball_mask5_dir}/{mask5startFrame}.pickle')
-
-            cap.release()
-
-    print(str_format(f"rest: {rest_data}", fore='y'))
-    pass
+    print(str_format(f"rest: done", fore='y'))
+    return
 
 def generateDataset(
     source_main_dir:Path = Path('Data/Paper_used'),
@@ -134,19 +93,43 @@ def generateDataset(
             if check2create_dir(hit_dir):
                 continue
             generate_hit_datasets(df, max_frame_id, img_dir, target_dir=hit_dir)    #! labal
-
-            miss_dir = target_dir / 'miss'
-            if check2create_dir(miss_dir):
-                continue
-            generate_miss_datasets(df, frame_ids, img_dir, target_dir=miss_dir)
     pass
+
+class ModelPerform:
+    def __init__(
+        self,
+        loss_order_names: List[str],
+        acc_order_names: List[str],
+        loss_records: torch.Tensor,
+        acc_records: torch.Tensor,
+        test_loss_records: torch.Tensor = None,
+        test_acc_records: torch.Tensor = None,
+    ) -> None:
+        self.acc_df = pd.DataFrame(self.convert(acc_records, acc_order_names))
+        self.loss_df = pd.DataFrame(self.convert(loss_records, loss_order_names))
+
+        self.haveTestRecords = test_acc_records is not None
+        if self.haveTestRecords:
+            self.test_loss_df = pd.DataFrame(self.convert(test_loss_records, loss_order_names))
+            self.test_acc_df = pd.DataFrame(self.convert(test_acc_records, acc_order_names))
+
+    @staticmethod
+    def convert(records: torch.Tensor, order_names: List[str]):
+        return {name: records[:, i].tolist() for i, name in enumerate(order_names)}
+
+    def save(self, saveDir: str, start_row: int = 0, end_row: int = None):
+        self.loss_df[start_row:end_row].to_csv(f'{saveDir}/train_loss.csv')
+        self.acc_df[start_row:end_row].to_csv(f'{saveDir}/train_acc.csv')
+
+        if self.haveTestRecords:
+            self.test_loss_df[start_row:end_row].to_csv(f'{saveDir}/val_loss.csv')
+            self.test_acc_df[start_row:end_row].to_csv(f'{saveDir}/val_acc.csv')
 
 def testing(
     test_dir:str = DatasetInfo.data_dir / 'test',    # 'Data/Paper_used/pre_process/frame13' / 'test'
     target_dir:str = 'Data/Paper_used/pre_process/frame13/test',
     source_dir:str = 'Data/AIdea_used/pre-process',
     sub_dir:str = 'ball_mask5_dir',
-    save_csv_path:str = 'train_hand_acc.csv',
     model_path:str = 'model/bestLoss-Sum.pt', 
     device:str = 'cpu'
 ):
@@ -165,7 +148,6 @@ def testing(
 
     handcraft_table_ls, correspond_table = get_static_handcraft_table(target_dir, source_dir, sub_dir, side_range)
     # print(handcraft_table_ls)
-    # print(correspond_table)
 
     test_info = DatasetInfo(data_dir=test_dir)  #! labal
     test_dataset = Frame13Dataset(side_range, dataset_info=test_info, isTrain=False)
@@ -185,7 +167,7 @@ def testing(
     )
 
     acc_records, acc_hand_records, start_idx_list = te.predict()
-    print(start_idx_list)
+    # print(start_idx_list)
     model_perform = ModelPerform(model_acc_names, model_acc_names, loss_records=acc_records, acc_records=acc_hand_records)
     # model_perform.loss_df.to_csv('train_acc.csv')
 
@@ -197,11 +179,13 @@ def testing(
         df.loc[i, "RoundHead"] += 1
         df.loc[i, "Backhand"] += 1
         df.loc[i, "BallHeight"] += 1
-        # df.loc[i, "Hitter"] += 1
         continue
     df = df.sort_values(by='HitFrame', ignore_index=True)
     df.insert(0, column="ShotSeq", value=range(1, len(df.index)+1))
-    df.to_csv(save_csv_path)
+
+    cols = df.columns.to_list()
+    cols.insert(13, cols.pop(cols.index('BallType')))
+    df = df[cols]
 
     return df
 
@@ -210,14 +194,14 @@ def get_game_infor(
 ):
 
     #? chack if they have self dir
-    video_id = video_path.split('/')[-1].split('.')[0]
+    video_path_split = video_path.split('/')
+    video_id = video_path_split[-1].split('.')[0]
     data_dir, video_name = os.path.split(video_path)
     if os.path.isfile(f'{data_dir}/{video_id}/{video_id}/{video_name}'):
         video_path = f'{data_dir}/{video_id}/{video_id}/{video_name}'
-    elif video_path.split('/')[-2] != video_id and video_path.split('/')[-3] != video_id :
+        # data_dir, video_name = os.path.split(video_path)
+    elif video_path_split[-2] != video_id and video_path_split[-3] != video_id :
         # mk self dir
-        # dir_path, ext = os.path.splitext(video_path)
-        # os.mkdir(f'{data_dir}/{video_id}')
         os.makedirs(f'{data_dir}/{video_id}/{video_id}')
         shutil.copyfile(video_path, f'{data_dir}/{video_id}/{video_id}/{video_name}')
         video_path = f'{data_dir}/{video_id}/{video_id}/{video_name}'
@@ -226,20 +210,20 @@ def get_game_infor(
 
     #? set path
     predict_test = Path(video_path).parents[1]
-    data_dir, video_name = os.path.split(video_path)
-    save_csv_path = str(predict_test) + '_train_hand_acc.csv'
 
-    device = '/gpu:0'
     # TrackPoint
     get5dir(
-        video_path, device
+        data_dir = f'{data_dir}/{video_id}',
+        filename = f'{video_id}/{video_path_split[-1]}',
+        data_id = video_id,
+        device ='/gpu:0'
     )    # get 5 dir
 
     # generateDataset with labal
     generateDataset(
-        source_main_dir = Path(predict_test),
-        target_main_dir = Path(predict_test),
-        image_main_dir = Path(predict_test),
+        source_main_dir = predict_test,
+        target_main_dir = predict_test,
+        image_main_dir = predict_test,
         data_types = ['.'], 
         source_sub_dir_name = 'image'
     )   # get hit dir
@@ -248,16 +232,14 @@ def get_game_infor(
     # os.rename(f'{data_dir}/ball_mask5_dir', f'{data_dir}/hit')
     # shutil.copyfile(f'{data_dir}/ball_mask5_dir', f'{data_dir}/hit')
 
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     # testing
     df = testing(
-        test_dir = Path(predict_test),    # 'Data/Paper_used/pre_process/frame13' / 'test'
-        target_dir = Path(predict_test),
-        source_dir = Path(predict_test),
+        test_dir = predict_test,    # 'Data/Paper_used/pre_process/frame13' / 'test'
+        target_dir = predict_test,
+        source_dir = predict_test,
         sub_dir = 'ball_mask5_dir',
-        save_csv_path = save_csv_path,
         model_path = str(PROJECT_DIR/'model/bestLoss-Sum.pt'), 
-        device=device
+        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     )   # get csv
 
     return df
@@ -267,12 +249,11 @@ if __name__ == '__main__':
 
     print(PROJECT_DIR) # PROJECT_DIR = .../Model/
 
-    # video_path = PROJECT_DIR/'Data/predict_test/00001.mp4'
-    # video_path = 'Data/predict_test/00001/00001/00001.mp4'
-    # video_path = 'Data/predict_test/00003.mp4'
     video_path = 'Model/Data/predict_test/00001.mp4'
+    save_csv_path = 'Model/Data/predict_test/00001_train_hand_acc.csv'
 
     df = get_game_infor(str(video_path))
+    df.to_csv(save_csv_path)
     print(df)
 
     print('spend time = ', time.time() - tt)

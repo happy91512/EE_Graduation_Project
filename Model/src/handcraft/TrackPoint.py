@@ -87,21 +87,10 @@ class TrackPoint:
             return
 
         self.masks, self.points = self.model.predict(*self.img3order_arr)
-        # print(self.currentFrame, self.points)
         orderIDs = (np.arange(self.currentFrame - 3, self.currentFrame), [2, 1, 0])
         self.total_masks3[orderIDs] = self.masks
         self.total_points3[orderIDs] = self.points
-        # print(self.total_points3[orderIDs])
-        # print(self.total_points3[orderIDs].shape)
 
-        if isDebug is True:
-            for i in range(3):
-                img_cp = self.img3order_arr[i].copy()
-                if self.masks is not None:
-                    img_cp[self.masks[i] > 100] = (0, 255, 0)
-
-                # cv2.imshow(f'img{i}', cv2.resize(img_cp, (self.debugger.WIDTH, self.debugger.HEIGHT)))
-                cv2.imwrite(str(self.debugger.predict_dir / f'{self.currentFrame-2+i}_{2-i}.jpg'), img_cp)
 
     def get_rangeInfo(self, start_frame: int = 0, end_frame: int = -1):
         '''

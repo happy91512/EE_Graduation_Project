@@ -53,12 +53,14 @@ def get5dir(
             if ret is False:
                 tp.currentFrame += 1
                 continue
-            tp.update_frame(frame, isDebug='update_frame' in DEBUG_LS)
+            # tt = time.time()
+            tp.update_frame(frame, isDebug='update_frame' in DEBUG_LS) 
             tp.predict(isDebug='predict' in DEBUG_LS)
+            # print('predict time = ', time.time() - tt)
         masks5_ls, mask5startFrames = tp.get_hitRangeMasks5(isDebug='get_hitRangeMasks5' in DEBUG_LS)
 
         for mask5, mask5startFrame in zip(masks5_ls, mask5startFrames):
-            save_pickle(mask5, f'{debugger.ball_mask5_dir}/{mask5startFrame}.pickle')
+            save_pickle('.', f'{debugger.ball_mask5_dir}/{mask5startFrame}.pickle')
         cap.release()
 
     print(str_format(f"trackPoint done", fore='y'))

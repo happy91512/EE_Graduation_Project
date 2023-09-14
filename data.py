@@ -3,6 +3,66 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter as ct
 
+def personal_data_analyze(game_info: pd.DataFrame = None) -> (str):
+    # parameters
+    Balltype_lists_A = []
+    Balltype_lists_B = []
+    BreakPoint = 0
+    # data 2 list
+    df_list = game_info.values.tolist()
+    # separate A B
+    for i in range(len(df_list) - 1):
+        Hitter = df_list[i + 1][2]
+        Balltype= df_list[i + 1][12]
+        if Hitter == 'A':
+            Balltype_lists_A.append(Balltype)
+        else:
+            Balltype_lists_B.append(Balltype)
+
+    counterA = ct(Balltype_lists_A)
+    counterB = ct(Balltype_lists_B)
+
+    # Get Server, Winner
+    ServerList = game_info[game_info['ShotSeq'] == 1]
+    WinnerList = game_info[game_info['Winner'].isin(['A', 'B'])]
+    Server = ServerList['Hitter'].tolist()
+    Winner = WinnerList['Winner'].tolist()
+    WinnerCT = ct(Winner)
+
+    # Win ratios
+    WinRate = round(WinnerCT['A']/len(ServerList)*100, 2)
+
+    # BreakPoint ratios
+    for i in range(len(ServerList)):
+        if Server[i] == Winner[i]:
+            BreakPoint += 1
+    BP_Rate = round(BreakPoint/len(ServerList)*100, 2)
+
+    ret_str = f'The HitterA win rate is {WinRate}%, BreakPoint rate is {BP_Rate}%'
+
+    # labels Balltype
+    labels = ['long', 'flat', 'smash', 'net shot', 'slice', 'lofted', 'push']
+    sizeA = [counterA[3], counterA[4], counterA[5], counterA[6], counterA[7], counterA[8], counterA[9]]
+    sizeB = [counterB[3], counterB[4], counterB[5], counterB[6], counterB[7], counterB[8], counterB[9]]
+
+    # filter 0 count index.
+    filtered_sizeA = [size for size in sizeA if size != 0]
+    filtered_labelsA = [label for label, size in zip(labels, sizeA) if size != 0]
+    filtered_sizeB = [size for size in sizeB if size != 0]
+    filtered_labelsB = [label for label, size in zip(labels, sizeB) if size != 0]
+
+    plt.figure()
+    fig, ax = plt.subplots()
+    ax.pie(filtered_sizeA, labels=filtered_labelsA, autopct='%1.1f%%')
+    plt.savefig('HitterA_balltype.png')
+
+    plt.figure()
+    fig, ax = plt.subplots()
+    ax.pie(filtered_sizeB, labels=filtered_labelsB, autopct='%1.1f%%')
+    plt.savefig('HitterB_balltype.png')
+    
+    return ret_str
+
 def data_analyze(game_info: pd.DataFrame = None) -> (str):
     # parameters
     index_mapping = {3: 'long', 4: 'flat', 5: 'smash', 6: 'net shot', 7: 'slice', 8: 'lofted', 9: 'push'}
@@ -10,7 +70,6 @@ def data_analyze(game_info: pd.DataFrame = None) -> (str):
     RoundHead_value_B = Backhand_value_B = Ballheight_value_B = 0
     Balltype_lists_A = []
     Balltype_lists_B = []
-
     # data to list
     df_list = game_info.values.tolist()
     if df_list[0][12] == 1:
@@ -107,5 +166,7 @@ def data_analyze(game_info: pd.DataFrame = None) -> (str):
     return ret_str
 
 if __name__ == '__main__':
-    string = data_analyze(pd.read_csv("00001_S2.csv"))
+    # string = data_analyze(pd.read_csv("00001_S2.csv"))
+    # print(string)
+    string = personal_data_analyze(pd.read_csv("00001_S2.csv"))
     print(string)

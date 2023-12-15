@@ -5,62 +5,57 @@ from collections import Counter as ct
 
 def personal_data_analyze(game_info: pd.DataFrame = None) -> (str):
     # parameters
-    Balltype_lists_A = []
-    Balltype_lists_B = []
+    Balltypelist = []
+    Serverlist = []
+    BreakPointlist = []
+    Shot = 0
     BreakPoint = 0
     # data 2 list
     df_list = game_info.values.tolist()
-    # separate A B
     for i in range(len(df_list) - 1):
-        Hitter = df_list[i + 1][2]
-        Balltype= df_list[i + 1][12]
-        if Hitter == 'A':
-            Balltype_lists_A.append(Balltype)
-        else:
-            Balltype_lists_B.append(Balltype)
-
-    counterA = ct(Balltype_lists_A)
-    counterB = ct(Balltype_lists_B)
+        Balltypelist.append(df_list[i][12])
+    CountBalltype = ct(Balltypelist)
+    for i in range(len(df_list) - 1):
+        if df_list[i][1] < df_list[i-1][1]:
+            Shot += 1
 
     # Get Server, Winner
-    ServerList = game_info[game_info['ShotSeq'] == 1]
     WinnerList = game_info[game_info['Winner'].isin(['A', 'B'])]
-    Server = ServerList['Hitter'].tolist()
     Winner = WinnerList['Winner'].tolist()
-    WinnerCT = ct(Winner)
-
+    
     # Win ratios
-    WinRate = round(WinnerCT['A']/len(ServerList)*100, 2)
-
+    WinRate = round((1 - (len(Winner) / Shot))* 100, 2)
     # BreakPoint ratios
-    for i in range(len(ServerList)):
-        if Server[i] == Winner[i]:
+    for i in range(len(df_list) - 1):
+        if df_list[i][1] < df_list[i-1][1]:
+            if df_list[i][12] <= 2:
+                Serverlist.append(df_list[i][2])
+            else:
+                Serverlist.append('X')
+        if df_list[i+1][1] < df_list[i][1]:
+            BreakPointlist.append(df_list[i][13])
+    BreakPointlist.append(df_list[len(df_list) - 1][13])
+    for i in range(len(Serverlist) - 1):
+        if Serverlist[i] == BreakPointlist[i]:
             BreakPoint += 1
-    BP_Rate = round(BreakPoint/len(ServerList)*100, 2)
+    BreakPoint = round((BreakPoint / Shot)* 100, 2)
 
-    ret_str = f'The HitterA win rate is {WinRate}%, BreakPoint rate is {BP_Rate}%'
-
+    # ret_str = f'The HitterA win rate is {WinRate}%, BreakPoint rate is {BP_Rate}%'
+    ret_str = f'The win ratios of this player is {WinRate}%, BreakPoint ratios is {BreakPoint}%'
     # labels Balltype
     labels = ['long', 'flat', 'smash', 'net shot', 'slice', 'lofted', 'push']
-    sizeA = [counterA[3], counterA[4], counterA[5], counterA[6], counterA[7], counterA[8], counterA[9]]
-    sizeB = [counterB[3], counterB[4], counterB[5], counterB[6], counterB[7], counterB[8], counterB[9]]
+    size = [CountBalltype[3], CountBalltype[4], CountBalltype[5], CountBalltype[6], CountBalltype[7], CountBalltype[8], CountBalltype[9]]
 
     # filter 0 count index.
-    filtered_sizeA = [size for size in sizeA if size != 0]
-    filtered_labelsA = [label for label, size in zip(labels, sizeA) if size != 0]
-    filtered_sizeB = [size for size in sizeB if size != 0]
-    filtered_labelsB = [label for label, size in zip(labels, sizeB) if size != 0]
+    filtered_size = [size for size in size if size != 0]
+    filtered_labels = [label for label, size in zip(labels, size) if size != 0]
+
 
     plt.figure()
     fig, ax = plt.subplots()
-    ax.pie(filtered_sizeA, labels=filtered_labelsA, autopct='%1.1f%%')
-    plt.savefig('HitterA_balltype.png')
+    ax.pie(filtered_size, labels=filtered_labels, autopct='%1.1f%%')
+    plt.savefig("Player's_balltype.png")
 
-    plt.figure()
-    fig, ax = plt.subplots()
-    ax.pie(filtered_sizeB, labels=filtered_labelsB, autopct='%1.1f%%')
-    plt.savefig('HitterB_balltype.png')
-    
     return ret_str
 
 def data_analyze(game_info: pd.DataFrame = None) -> (str):

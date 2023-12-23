@@ -60,17 +60,14 @@ def personal_data_analyze(game_info: pd.DataFrame = None) -> (str):
 
 def data_analyze(game_info: pd.DataFrame = None) -> (str):
     # parameters
-    index_mapping = {3: 'long', 4: 'flat', 5: 'smash', 6: 'net shot', 7: 'slice', 8: 'lofted', 9: 'push'}
+    index_mapping = {1:'short', 2:'high', 3: 'long', 4: 'flat', 5: 'smash', 6: 'net shot', 7: 'slice', 8: 'lofted', 9: 'push'}
     RoundHead_value_A = Backhand_value_A = Ballheight_value_A = 0
     RoundHead_value_B = Backhand_value_B = Ballheight_value_B = 0
     Balltype_lists_A = []
     Balltype_lists_B = []
     # data to list
     df_list = game_info.values.tolist()
-    if df_list[0][12] == 1:
-        service:str = 'short service'
-    else:
-        service:str = 'high service'
+    service:str = f'{index_mapping[df_list[0][12]]} service'
     
     # separate A B data
     for i in range(len(df_list) - 1):
@@ -86,7 +83,6 @@ def data_analyze(game_info: pd.DataFrame = None) -> (str):
             Backhand_value_B  = Backhand_value_B + Backhand
             Ballheight_value_B = Ballheight_value_B + Ballheight
             Balltype_lists_B.append(Balltype)
-
     HitterA_data = [RoundHead_value_A, Backhand_value_A, Ballheight_value_A, len(Balltype_lists_A)]
     HitterB_data = [RoundHead_value_B, Backhand_value_B, Ballheight_value_B, len(Balltype_lists_B)]
     # analyze A data
@@ -108,6 +104,11 @@ def data_analyze(game_info: pd.DataFrame = None) -> (str):
         initiative:str = 'Hitter B.'
     else:
         initiative:str = 'Hitter A.'
+    # adding service
+    if df_list[0][3] == 'A':
+        Balltype_lists_A.append(df_list[0][12])
+    else:
+        Balltype_lists_B.append(df_list[0][12])
     # get max mapping value
     counterA = ct(Balltype_lists_A)
     counterB = ct(Balltype_lists_B)
@@ -163,5 +164,5 @@ def data_analyze(game_info: pd.DataFrame = None) -> (str):
 if __name__ == '__main__':
     # string = data_analyze(pd.read_csv("00001_S2.csv"))
     # print(string)
-    string = personal_data_analyze(pd.read_csv("00001_S2.csv"))
+    string = data_analyze(pd.read_csv("00001_S2.csv"))
     print(string)
